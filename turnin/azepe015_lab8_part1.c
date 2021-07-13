@@ -1,8 +1,8 @@
 /*	Author: Alyssa Zepeda
  *  Partner(s) Name: 
  *	Lab Section:
- *	Assignment: Lab #8  Exercise #2
- *	Exercise Description: https://youtu.be/Ns414cgid1k
+ *	Assignment: Lab #8  Exercise #1
+ *	Exercise Description: https://youtu.be/8DHfh8jHNHM
  *
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
@@ -10,7 +10,6 @@
 #include <avr/io.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
-//#include "timer.h"
 #endif
 
 //0.954 Hz is lowest frequency possible with this function
@@ -52,68 +51,26 @@ void PWM_off() {
 	TCCR3A = 0x00;
 	TCCR3B = 0x00;
 }
-/////////////////////////////////////////////////////////////////////////
-
-enum states{start, init, inc, dec, power, release} state;
-double freq[8] = {261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25};
-unsigned char freqPos = 0x00; //position on frequency array
-unsigned char pwr;
-
-void Tick() {
-   switch(state) {
-	case start: state = init; break;
-	case init: 
-		if((~PINA&0x07) == 0x01) {state = power;}
-		else if((~PINA&0x07) == 0x02) {state = inc;}
-		else if((~PINA&0x07) == 0x04) {state = dec;}
-		else {state = init;}
-		break;
-	case inc: state = release; break;
-	case dec: state = release; break;
-	case power: state = release; break;
-	case release:
-		state = ((~PINA&0x07) == 0x00) ? init : release;
-		break;
-	default: break;
-   }
-   switch(state) {
-	case start: pwr = 0; break;
-	case init: break;
-	case inc:
-		if(freqPos  < 0x07) {freqPos++;}
-		if(pwr == 0x01) {set_PWM(freq[freqPos]);}
-		break;
-	case dec: 
-		if(freqPos > 0x00) {freqPos--;}
-		if(pwr == 0x01) {set_PWM(freq[freqPos]);}
-		break;
-	case power:
-		if(pwr == 0) {
-			set_PWM(freq[freqPos]);
-			pwr = 0x01;
-		} 
-		else if(pwr == 1) {
-			set_PWM(0);
-			pwr = 0x00;
-		}
-		break;
-	case release:
-		break;
-	default: break;
-   }
-}   
-	
-
 
 int main(void) {
     /* Insert DDR and PORT initializations */
 	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0x40; PORTB = 0x00; //set only PB6
     /* Insert your solution below */
-  PWM_on();
- state = start; 
+   PWM_on(); 
    while (1) {
-	Tick();
+	if((~PINA & 0x07) == 0x01) {
+		set_PWM(261.63);
+	}
+	else if((~PINA & 0x07) == 0x02) {
+		set_PWM(293.66);
+	}
+	else if((~PINA & 0x07) == 0x04) {
+		set_PWM(329.63);
+	}
+	else {
+		set_PWM(0);
+	}
     }
     PWM_off();
     return 1;
